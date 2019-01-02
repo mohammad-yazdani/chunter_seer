@@ -26,8 +26,11 @@ type Fetch struct {
 	Data []CourseSchedule `json:"data"`
 }
 
-func SetApiKey(key string) {
+func SetUpApi(key string) {
 	apiKey = key
+	fetchListMutex.Lock()
+	fetchList = make(map[CourseCatalog]int, 0)
+	fetchListMutex.Unlock()
 }
 
 func formQuery(subQueries ...string) string {

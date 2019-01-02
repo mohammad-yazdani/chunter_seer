@@ -3,11 +3,17 @@ package api
 import (
 	"encoding/json"
 	"log"
+	"sync"
 )
 
 type CourseCatalog struct {
-	Subject       string
-	CatalogNumber string
+	Subject       	string
+	CatalogNumber 	string
+	Section 		string
+}
+
+func (c * CourseCatalog) IsEmpty() bool {
+	return c.Subject == "" || c.CatalogNumber == ""
 }
 
 type CourseReserves struct {
@@ -61,6 +67,31 @@ type CourseSchedule struct {
 	Term               int `json:"term"`
 	AcademicLevel      string `json:"academic_level"`
 	LastUpdated        string `json:"last_updated"`
+}
+
+var fetchList map[CourseCatalog]int
+var fetchListMutex = &sync.Mutex{}
+
+func AddToFetchList(c CourseCatalog) {
+	fetchListMutex.Lock()
+	fetchList[c] += 1
+	fetchListMutex.Unlock()
+}
+
+func GetFetchList() []CourseCatalog {
+	catalogs := make([]CourseCatalog, len(fetchList))
+
+	fetchListMutex.Lock()
+	for key := range fetchList {
+		catalogs = append(catalogs, key)
+	}
+	fetchListMutex.Unlock()
+
+	return catalogs
+}
+
+func GetFetchMap() * map[CourseCatalog]int {
+	return &fetchList
 }
 
 func (c * CourseSchedule) ToString () string {
