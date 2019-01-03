@@ -11,11 +11,7 @@ func PollEndpoint(interval int)  {
 	}
 }
 
-func fetchCourses(t time.Time) {
-
-	// TODO : Log time properly
-	println(t.String())
-
+func fetchCourses(_ time.Time) {
 	catalogs := api.GetFetchList()
 	for _, catalog := range catalogs {
 		if catalog.IsEmpty() {

@@ -2,9 +2,9 @@ package notif
 
 import (
 	"chunter_seer/listen"
+	"chunter_seer/shared"
 	"chunter_seer/store"
 	"crypto/tls"
-	"log"
 	"net/smtp"
 	"strconv"
 	"strings"
@@ -48,31 +48,31 @@ func MailChange(course string, change int) {
 
 	conn, err := tls.Dial("tcp", serverHostName + ":465", tlsConfig)
 	if err != nil {
-		log.Panic(err)
+		shared.LOG(err.Error())
 	}
 
 	client, err := smtp.NewClient(conn, serverHostName)
 	if err != nil {
-		log.Panic(err)
+		shared.LOG(err.Error())
 	}
 
 	if err = client.Auth(auth); err != nil {
-		log.Panic(err)
+		shared.LOG(err.Error())
 	}
 
 	if err = client.Mail(serverUsername); err != nil {
-		log.Panic(err)
+		shared.LOG(err.Error())
 	}
 
 	u0 := mailingList[0]
 
 	if err = client.Rcpt(u0); err != nil {
-		log.Panic(err)
+		shared.LOG(err.Error())
 	}
 
 	w, err := client.Data()
 	if err != nil {
-		log.Panic(err)
+		shared.LOG(err.Error())
 	}
 
 	msg := "From: " + serverUsername + "\n" +
@@ -94,18 +94,18 @@ func MailChange(course string, change int) {
 	msg = msgString.String()
 	_, err = w.Write([]byte(msg))
 	if err != nil {
-		log.Panic(err)
+		shared.LOG(err.Error())
 	}
 
 	err = w.Close()
 	if err != nil {
-		log.Panic(err)
+		shared.LOG(err.Error())
 	}
 
 	err = client.Quit()
 	if err != nil {
-		log.Panic(err)
+		shared.LOG(err.Error())
 	}
 
-	log.Println("Mail sent successfully")
+	shared.LOG("Mail sent successfully")
 }

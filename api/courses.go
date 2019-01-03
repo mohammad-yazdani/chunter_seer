@@ -1,9 +1,9 @@
 package api
 
 import (
+	"chunter_seer/shared"
 	"chunter_seer/store"
 	"encoding/json"
-	"log"
 	"strings"
 	"sync"
 )
@@ -103,7 +103,7 @@ func GetFetchList() []CourseCatalog {
 func (c * CourseSchedule) ToString () string {
 	str, err := json.Marshal(c)
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 	return string(str)
 }

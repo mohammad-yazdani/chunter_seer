@@ -1,6 +1,7 @@
 package api
 
 import (
+	"chunter_seer/shared"
 	"encoding/json"
 )
 
@@ -10,6 +11,9 @@ type courseStats struct {
 
 // Request Handler
 func GetStats(_ string) (string, error) {
+
+	shared.LOG("STATS QUERY")
+
 	stats := map[string]map[string]courseStats{}
 
 	for key, val := range fetchList {

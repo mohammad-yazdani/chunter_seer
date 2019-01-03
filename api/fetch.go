@@ -1,9 +1,9 @@
 package api
 
 import (
+	"chunter_seer/shared"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -12,7 +12,7 @@ func getCourseSchedule(query string) Fetch {
 
 	data, err := http.Get(query)
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 
 	jsonCourseSchedule, err = ioutil.ReadAll(data.Body)
@@ -20,7 +20,7 @@ func getCourseSchedule(query string) Fetch {
 	var fetched Fetch
 	err = json.Unmarshal(jsonCourseSchedule, &fetched)
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 	return fetched
 }

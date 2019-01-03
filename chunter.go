@@ -6,12 +6,13 @@ import (
 	"chunter_seer/listen"
 	"chunter_seer/notif"
 	"chunter_seer/sched"
+	"chunter_seer/shared"
 	"chunter_seer/store"
-	"log"
 	"os"
 )
 
 func setup(configArray []string) {
+	shared.SetUpLog()
 	store.SetUpDb()
 	api.SetUpApi(configArray[0])
 	sched.SetUpScheduler()
@@ -21,7 +22,7 @@ func setup(configArray []string) {
 func main() {
 	keyFile, err := os.Open("config.txt")
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 
 	defer keyFile.Close()
@@ -40,4 +41,7 @@ func main() {
 	listen.Start()
 
 	store.CloseDb()
+
+	shared.LOG("END OF LOG")
+	shared.CloseLog()
 }

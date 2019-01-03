@@ -1,9 +1,9 @@
 package store
 
 import (
+	"chunter_seer/shared"
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"log"
 )
 
 // TODO : ALL TEMP
@@ -14,7 +14,7 @@ func SetUpDb() {
 	db, err := sql.Open("sqlite3", "./store.db")
 	store = db
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 
 	sqlStmt := `
@@ -22,7 +22,7 @@ func SetUpDb() {
 	`
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
-		log.Printf("%q: %s\n", err, sqlStmt)
+		shared.LOG(err.Error())
 		return
 	}
 
@@ -32,7 +32,7 @@ func SetUpDb() {
 	`
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
-		log.Printf("%q: %s\n", err, sqlStmt)
+		shared.LOG(err.Error())
 		return
 	}
 }
@@ -44,52 +44,52 @@ func CloseDb() {
 func AddEmail(email string) {
 	tx, err := store.Begin()
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 	stmt, err := tx.Prepare("insert into emails(email) values(?)")
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 
 	_, err = stmt.Exec(email)
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 
 	err = stmt.Close()
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 }
 
 func AddCourse(subject string, catalogNumber string) {
 	tx, err := store.Begin()
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 	stmt, err := tx.Prepare("insert into courses(subject, catalog_number) values(?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 
 	_, err = stmt.Exec(subject, catalogNumber)
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 
 	err = stmt.Close()
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 }
 
@@ -98,7 +98,7 @@ func GetEmails() []string {
 
 	rows, err := store.Query("select email from emails")
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 	defer rows.Close()
 
@@ -109,12 +109,12 @@ func GetEmails() []string {
 		emails = append(emails, email)
 
 		if err != nil {
-			log.Fatal(err)
+			shared.LOG(err.Error())
 		}
 	}
 	err = rows.Err()
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 
 	return emails
@@ -125,7 +125,7 @@ func GetCourses()[][]string  {
 
 	rows, err := store.Query("select subject, catalog_number from courses")
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 	defer rows.Close()
 
@@ -138,12 +138,12 @@ func GetCourses()[][]string  {
 		courses = append(courses, []string{subject, catalogNumber})
 
 		if err != nil {
-			log.Fatal(err)
+			shared.LOG(err.Error())
 		}
 	}
 	err = rows.Err()
 	if err != nil {
-		log.Fatal(err)
+		shared.LOG(err.Error())
 	}
 
 	return courses

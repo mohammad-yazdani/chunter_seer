@@ -3,7 +3,7 @@ package sched
 import (
 	"chunter_seer/api"
 	"chunter_seer/notif"
-	"log"
+	"chunter_seer/shared"
 )
 
 var forceFlushInterval = 4320
@@ -28,12 +28,12 @@ func SetUpScheduler()  {
 
 func handleChange(change EnrollChange) {
 	forceFlushCounter += 1
-	log.Println("Force Flush Counter", forceFlushCounter)
 	if change.Change == 0 && forceFlushCounter < forceFlushInterval {
 		return
 	}
 	if forceFlushCounter == forceFlushInterval {
 		forceFlushCounter = 0
+		shared.LOG("FORCE FLUSH")
 	}
 	notif.MailChange(change.Course.Subject + change.Course.CatalogNumber, change.Change)
 }
