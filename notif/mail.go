@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"log"
 	"net/smtp"
+	"strconv"
 	"strings"
 )
 
@@ -62,7 +63,9 @@ func MailChange(course string, change int) {
 		log.Panic(err)
 	}
 
-	if err = client.Rcpt(mailingList[0].Username); err != nil {
+	u0 := mailingList[0]
+
+	if err = client.Rcpt(u0.Username); err != nil {
 		log.Panic(err)
 	}
 
@@ -71,16 +74,23 @@ func MailChange(course string, change int) {
 		log.Panic(err)
 	}
 
+	msg := "From: " + serverUsername + "\n" +
+		"To: " + u0.Username + "\n" +
+		"Subject: Chunter UPDATE\n\n"
+
 	msgString := strings.Builder{}
+	msgString.WriteString(msg)
+
 	msgString.WriteString("Course: ")
 	msgString.WriteString(course)
 	msgString.WriteString("\n")
 
+	changeStr := strconv.FormatInt(int64(change), 10)
 	msgString.WriteString("Change: ")
-	msgString.WriteString(string(change))
+	msgString.WriteString(changeStr)
 	msgString.WriteString("\n")
 
-	msg := msgString.String()
+	msg = msgString.String()
 	_, err = w.Write([]byte(msg))
 	if err != nil {
 		log.Panic(err)
