@@ -1,8 +1,10 @@
 package api
 
 import (
+	"chunter_seer/store"
 	"encoding/json"
 	"log"
+	"strings"
 	"sync"
 )
 
@@ -72,10 +74,18 @@ type CourseSchedule struct {
 var fetchList map[CourseCatalog]int
 var fetchListMutex = &sync.Mutex{}
 
-func AddToFetchList(c CourseCatalog) {
+func AddToFetchList(catalog string) (string, error) {
+
+	trim := strings.Split(catalog, " ")
+
+	c := CourseCatalog{Subject:trim[0], CatalogNumber:trim[1], Section:""}
+
 	fetchListMutex.Lock()
 	fetchList[c] += 1
+	store.AddCourse(c.Subject, c.CatalogNumber)
 	fetchListMutex.Unlock()
+
+	return "OK", nil
 }
 
 func GetFetchList() []CourseCatalog {
@@ -88,10 +98,6 @@ func GetFetchList() []CourseCatalog {
 	fetchListMutex.Unlock()
 
 	return catalogs
-}
-
-func GetFetchMap() * map[CourseCatalog]int {
-	return &fetchList
 }
 
 func (c * CourseSchedule) ToString () string {

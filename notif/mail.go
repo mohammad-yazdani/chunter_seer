@@ -1,6 +1,8 @@
 package notif
 
 import (
+	"chunter_seer/listen"
+	"chunter_seer/store"
 	"crypto/tls"
 	"log"
 	"net/smtp"
@@ -8,12 +10,7 @@ import (
 	"strings"
 )
 
-type UserMail struct {
-	Username string
-	Server string
-}
-
-var mailingList []UserMail
+var mailingList []string
 
 var serverUsername string
 var serverPassword string
@@ -24,11 +21,15 @@ func SetUpMail(username string, password string, host string) {
 	serverPassword = password
 	serverHostName = host
 
-	mailingList = make([]UserMail, 0)
+	mailingList = store.GetEmails()
+
+	listen.AddHandler("add_mail", AddToMailingList)
 }
 
-func AddToMailingList(mail UserMail)  {
+func AddToMailingList(mail string) (string, error) {
 	mailingList = append(mailingList, mail)
+	store.AddEmail(mail)
+	return "OK", nil
 }
 
 // TODO : TEMP solution
@@ -65,7 +66,7 @@ func MailChange(course string, change int) {
 
 	u0 := mailingList[0]
 
-	if err = client.Rcpt(u0.Username); err != nil {
+	if err = client.Rcpt(u0); err != nil {
 		log.Panic(err)
 	}
 
@@ -75,7 +76,7 @@ func MailChange(course string, change int) {
 	}
 
 	msg := "From: " + serverUsername + "\n" +
-		"To: " + u0.Username + "\n" +
+		"To: " + u0 + "\n" +
 		"Subject: Chunter UPDATE\n\n"
 
 	msgString := strings.Builder{}

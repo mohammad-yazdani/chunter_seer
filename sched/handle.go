@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-var forceFlushInterval = 360
+var forceFlushInterval = 4320
 
 type EnrollStats struct {
 	Capacity int
@@ -24,10 +24,6 @@ var forceFlushCounter int
 func SetUpScheduler()  {
 	courseStats = make(map[api.CourseCatalog]EnrollStats, 0)
 	forceFlushCounter = 0
-}
-
-func SetForceFlushInterval(interval int) {
-	forceFlushInterval = interval
 }
 
 func handleChange(change EnrollChange) {

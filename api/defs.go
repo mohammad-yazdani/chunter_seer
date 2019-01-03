@@ -1,6 +1,10 @@
 package api
 
-import "strings"
+import (
+	"chunter_seer/listen"
+	"chunter_seer/store"
+	"strings"
+)
 
 const uwBaseApiV2Courses = "https://api.uwaterloo.ca/v2/courses"
 
@@ -30,7 +34,14 @@ func SetUpApi(key string) {
 	apiKey = key
 	fetchListMutex.Lock()
 	fetchList = make(map[CourseCatalog]int, 0)
+	fromDb := store.GetCourses()
+	for _, course := range fromDb {
+		fetchList[CourseCatalog{Subject:course[0], CatalogNumber:course[1]}] = 0
+	}
 	fetchListMutex.Unlock()
+
+	listen.AddHandler("add_course", AddToFetchList)
+	listen.AddHandler("stats", GetStats)
 }
 
 func formQuery(subQueries ...string) string {

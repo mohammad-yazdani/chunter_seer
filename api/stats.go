@@ -1,15 +1,18 @@
-package listen
+package api
 
-import "chunter_seer/api"
+import (
+	"encoding/json"
+)
 
 type courseStats struct {
 	Listeners 	int `json:"listeners"`
 }
 
-func genStats() map[string]map[string]courseStats {
+// Request Handler
+func GetStats(_ string) (string, error) {
 	stats := map[string]map[string]courseStats{}
 
-	for key, val := range *api.GetFetchMap() {
+	for key, val := range fetchList {
 		if key.IsEmpty() {
 			continue
 		}
@@ -25,5 +28,8 @@ func genStats() map[string]map[string]courseStats {
 		stats[subject][catalogNumber] = courseStats{Listeners:listeners}
 	}
 
-	return stats
+	jsonBody, err := json.Marshal(stats)
+
+	return string(jsonBody), err
 }
+

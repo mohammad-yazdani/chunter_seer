@@ -17,9 +17,6 @@ func getCourseSchedule(query string) Fetch {
 
 	jsonCourseSchedule, err = ioutil.ReadAll(data.Body)
 
-	jsonString := string(jsonCourseSchedule)
-	println(jsonString)
-
 	var fetched Fetch
 	err = json.Unmarshal(jsonCourseSchedule, &fetched)
 	if err != nil {

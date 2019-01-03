@@ -1,85 +1,40 @@
 package listen
 
 import (
-	"chunter_seer/api"
-	"chunter_seer/notif"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
 
-func handleAddCourse(w http.ResponseWriter, r *http.Request)  {
-	log.Println(r.URL.Path)
-
-	subject := r.URL.Query().Get("subject")
-	catalogNumber := r.URL.Query().Get("catalog_number")
-
-	if subject == "" || catalogNumber == "" {
-		_, err := w.Write([]byte("No subject or catalog number provided."))
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Println("No subject or catalog number provided.")
-		return
+func requestDispatcher(w http.ResponseWriter, r *http.Request)  {
+	jsonBody, err := ioutil.ReadAll(r.Body)
+	err = r.Body.Close()
+	if err != nil {
+		log.Panic(err)
 	}
 
-	catalog := api.CourseCatalog{Subject:subject, CatalogNumber:catalogNumber}
-
-	api.AddToFetchList(catalog)
-
-	w.Header().Add("subject", catalog.Subject)
-	w.Header().Add("catalog_number", catalog.CatalogNumber)
-	_, err := w.Write([]byte("OK"))
+	request := make(Request)
+	err = json.Unmarshal(jsonBody, &request)
 	if err != nil {
 		log.Fatal(err)
 	}
-}
 
-func handleAddMail(w http.ResponseWriter, r *http.Request)  {
-	log.Println(r.URL.Path)
+	response := handleRequest(request)
 
-	server := r.URL.Query().Get("server")
-	email := r.URL.Query().Get("email")
-
-	if server == "" || email == "" {
-		_, err := w.Write([]byte("No server or email provided."))
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Println("No server or email provided.")
-		return
-	}
-
-	mail := notif.UserMail{Server:server, Username:email}
-
-	notif.AddToMailingList(mail)
-
-	w.Header().Add("server", server)
-	w.Header().Add("email", email)
-	_, err := w.Write([]byte("OK"))
+	jsonBody, err = json.Marshal(response)
 	if err != nil {
 		log.Fatal(err)
 	}
-}
 
-func handleStats(w http.ResponseWriter, r *http.Request)  {
-	log.Println(r.URL.Path)
-
-	stats := genStats()
-	statsJSON, err := json.Marshal(stats)
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = w.Write(statsJSON)
+	_, err = w.Write(jsonBody)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func Start()  {
-	http.HandleFunc("/add/course", handleAddCourse)
-	http.HandleFunc("/add/mail", handleAddMail)
-	http.HandleFunc("/stats", handleStats)
+	http.HandleFunc("/", requestDispatcher)
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		panic(err)
