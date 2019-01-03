@@ -15,5 +15,5 @@ Adding to mailing list:
 
 Add a course:
 
-`http GET localhost:8080/add/mail?subject=CS&catalog_number=466`
+`http GET localhost:8080/add/course subject==CS catalog_number==450`
 
