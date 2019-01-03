@@ -8,6 +8,7 @@ import (
 	"chunter_seer/sched"
 	"log"
 	"os"
+	"strconv"
 )
 
 func setup(configArray []string) {
@@ -17,6 +18,17 @@ func setup(configArray []string) {
 }
 
 func main() {
+
+	args := os.Args[1:]
+
+	if len(args) > 0 {
+		strArg := args[0]
+		interval, err := strconv.Atoi(strArg)
+		if err == nil {
+			sched.SetForceFlushInterval(interval)
+		}
+	}
+
 	keyFile, err := os.Open("config.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -33,11 +45,6 @@ func main() {
 	}
 
 	setup(configArray)
-
-	subject := "CS"
-	catalogNumber := "450"
-
-	api.AddToFetchList(api.CourseCatalog{Subject:subject, CatalogNumber:catalogNumber})
 
 	go sched.PollEndpoint(5)
 	listen.Start()
