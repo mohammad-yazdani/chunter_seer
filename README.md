@@ -2,7 +2,9 @@
 C[ourse]hunter: Let Chunter tell you exactly where someone drops that course you've been eyeing.
 
 ## Use
-The API endpoint is `18.221.69.86:8080`. Use the local examples below and replace IP:port.
+The API endpoint is `18.221.69.86:8080`. The `examples` folder has some example on how to interact with Chunter_SeeR JSON API.
+
+All HTTP calls are POST (with request JSON in the body).
 
 
 ## Build and Run
@@ -11,13 +13,20 @@ The API endpoint is `18.221.69.86:8080`. Use the local examples below and replac
 `./chunter`
 
 ## Local Server Examples (using HTTPie)
-`brew install httpie` || `apt-get install httpie`
+Install HTTPie: 
+
+- macOS: `brew install httpie`
+
+- Ubuntu/WSL: `apt-get install httpie`
 
 Adding to mailing list:
 
-`http GET localhost:8080/add/mail email==test.test@gmail.com server==mail.google.com`
+` http -v localhost:8080 < examples/add_mail.json`
 
-Add a course:
+Adding course(s):
 
-`http GET localhost:8080/add/course subject==CS catalog_number==450`
+` http -v localhost:8080 < examples/add_course.json`
 
+Getting stats:
+
+`http -v localhost:8080 < examples/get_stats.json`
