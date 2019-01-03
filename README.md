@@ -1,12 +1,16 @@
 # Chunter :: SeeR
 C[ourse]hunter: Let Chunter tell you exactly where someone drops that course you've been eyeing.
 
+## Use
+The API endpoint is `18.221.69.86:8080`. Use the local examples below and replace IP:port.
+
+
 ## Build and Run
 `go chunter.go`
 
 `./chunter`
 
-## Local Test (using HTTPie)
+## Local Server Examples (using HTTPie)
 `brew install httpie` || `apt-get install httpie`
 
 Adding to mailing list:
