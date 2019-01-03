@@ -1,6 +1,12 @@
 package sched
 
-import "chunter_seer/api"
+import (
+	"chunter_seer/api"
+	"chunter_seer/notif"
+	"log"
+)
+
+const forceFlushInterval = 360
 
 type EnrollStats struct {
 	Capacity int
@@ -8,25 +14,28 @@ type EnrollStats struct {
 }
 
 type EnrollChange struct {
-	course api.CourseCatalog
-	change int
+	Course api.CourseCatalog
+	Change int
 }
 
 var courseStats map[api.CourseCatalog]EnrollStats
+var forceFlushCounter int
 
 func SetUpScheduler()  {
 	courseStats = make(map[api.CourseCatalog]EnrollStats, 0)
+	forceFlushCounter = 0
 }
 
 func handleChange(change EnrollChange) {
-	if change.change != 0 {
-		// TODO : Notify user
-		println("Handling change ", change.course.Subject, change.course.CatalogNumber, change.change)
-	} else {
-		println("NO change ", change.course.Subject, change.course.CatalogNumber, change.change)
+	forceFlushCounter += 1
+	log.Println("Force Flush Counter", forceFlushCounter)
+	if change.Change == 0 && forceFlushCounter < forceFlushInterval {
+		return
 	}
-
-
+	if forceFlushCounter == forceFlushInterval {
+		forceFlushCounter = 0
+	}
+	notif.MailChange(change.Course.Subject + change.Course.CatalogNumber, change.Change)
 }
 
 // TODO : Thread runnable
@@ -39,11 +48,11 @@ func hasChanged(schedules []api.CourseSchedule) {
 		if stats, exists := courseStats[catalog]; exists {
 			oldDiff := stats.Capacity - stats.Total
 			newDiff := schedule.EnrollmentCapacity - schedule.EnrollmentTotal
-			handleChange(EnrollChange{course:catalog, change:newDiff - oldDiff})
+			handleChange(EnrollChange{Course:catalog, Change:newDiff - oldDiff})
 		} else {
 			courseStats[catalog] = EnrollStats{Capacity:schedule.EnrollmentCapacity,
 				Total:schedule.EnrollmentTotal}
-			handleChange(EnrollChange{course:catalog, change:0})
+			handleChange(EnrollChange{Course:catalog, Change:0})
 		}
 	}
 }
