@@ -3,7 +3,10 @@ package sched
 import (
 	"chunter_seer/api"
 	"chunter_seer/notif"
+	"log"
 )
+
+const forceFlushInterval = 360
 
 type EnrollStats struct {
 	Capacity int
@@ -16,12 +19,22 @@ type EnrollChange struct {
 }
 
 var courseStats map[api.CourseCatalog]EnrollStats
+var forceFlushCounter int
 
 func SetUpScheduler()  {
 	courseStats = make(map[api.CourseCatalog]EnrollStats, 0)
+	forceFlushCounter = 0
 }
 
 func handleChange(change EnrollChange) {
+	forceFlushCounter += 1
+	log.Println("Force Flush Counter", forceFlushCounter)
+	if change.Change == 0 && forceFlushCounter < forceFlushInterval {
+		return
+	}
+	if forceFlushCounter == forceFlushInterval {
+		forceFlushCounter = 0
+	}
 	notif.MailChange(change.Course.Subject + change.Course.CatalogNumber, change.Change)
 }
 
