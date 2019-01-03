@@ -2,4 +2,6 @@
 .vscode
 *.txt
 *.db
+*.log
+chunter_seer
 
