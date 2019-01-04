@@ -31,6 +31,7 @@ func hasChanged(schedules []api.CourseSchedule) {
 
 	changeBatch := make([]notif.ChangeNotification, 0)
 	processBatch := make([]store.EnrollStats, 0)
+	oldDiffs := make([]int, 0)
 
 	for _, schedule := range schedules {
 		catalog := schedule.ClassNumber
@@ -44,10 +45,17 @@ func hasChanged(schedules []api.CourseSchedule) {
 
 			if oldDiff != newDiff {
 				course := schedule.Subject + " " + schedule.CatalogNumber + " " + schedule.Subject
-				changeBatch = append(changeBatch, notif.ChangeNotification{Catalog:course, Change:newDiff - oldDiff})
+				changeBatch = append(changeBatch,
+					notif.ChangeNotification{
+						Catalog:course,
+						Total:schedule.EnrollmentTotal,
+						Capacity:schedule.EnrollmentCapacity,
+						Change:newDiff - oldDiff})
 			}
+			oldDiffs = append(oldDiffs, oldDiff)
 		} else {
 			courseStats[catalog] = stat
+			oldDiffs = append(oldDiffs, 0)
 		}
 
 		processBatch = append(processBatch, stat)
@@ -57,14 +65,18 @@ func hasChanged(schedules []api.CourseSchedule) {
 		shared.LOG("FORCE FLUSH")
 
 		mailFlush := make([]notif.ChangeNotification, 0)
-		for _, c := range processBatch {
+		for diffIndex, c := range processBatch {
 			store.SaveEnrollment(c)
 			catalog := c.Subject + " " + c.CatalogNumber + " " + c.Section
-			change := notif.ChangeNotification{Catalog:catalog, Change: c.Capacity - c.Total}
+			change := notif.ChangeNotification{
+				Catalog:catalog,
+				Total:c.Total,
+				Capacity:c.Capacity,
+				Change: (c.Capacity - c.Total) - (oldDiffs[diffIndex])}
 			mailFlush = append(mailFlush, change)
 		}
 
-		notif.MailChange(changeBatch)
+		notif.MailChange(mailFlush)
 	}
 
 	if len(changeBatch) > 0 && forceFlushCounter != 0 {

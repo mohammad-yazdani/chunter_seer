@@ -12,6 +12,8 @@ import (
 
 type ChangeNotification struct {
 	Catalog string
+	Total int
+	Capacity int
 	Change int
 }
 
@@ -45,7 +47,7 @@ func AddToMailingList(mail string) (string, error) {
 // TODO : TEMP solution
 func MailChange(notifications []ChangeNotification) {
 
-	if len(mailingList) == 0 {
+	if len(mailingList) == 0 || len(notifications) == 0 {
 		return
 	}
 
@@ -85,7 +87,7 @@ func MailChange(notifications []ChangeNotification) {
 		shared.LOG(err.Error())
 	}
 
-	msg := "From: " + serverUsername + "\n" +
+	msg := "From: " + "Chunter SeeR" + "\n" +
 		"To: " + u0 + "\n" +
 		"Subject: Chunter UPDATE\n\n"
 
@@ -100,11 +102,21 @@ func MailChange(notifications []ChangeNotification) {
 
 		msgString.WriteString("Course: ")
 		msgString.WriteString(change.Catalog)
-		msgString.WriteString("\t\t")
+		msgString.WriteString("\n")
 
 		changeStr := strconv.FormatInt(int64(change.Change), 10)
-		msgString.WriteString("Change: ")
+		msgString.WriteString("\t- Change: ")
 		msgString.WriteString(changeStr)
+		msgString.WriteString("\n")
+
+		totalStr := strconv.FormatInt(int64(change.Total), 10)
+		msgString.WriteString("\t- Total: ")
+		msgString.WriteString(totalStr)
+		msgString.WriteString("\n")
+
+		capStr := strconv.FormatInt(int64(change.Capacity), 10)
+		msgString.WriteString("\t- Capacity: ")
+		msgString.WriteString(capStr)
 		msgString.WriteString("\n")
 	}
 

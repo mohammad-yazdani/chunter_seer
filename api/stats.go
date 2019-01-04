@@ -32,7 +32,8 @@ func GetStats(_ string) (string, error) {
 	}
 
 	jsonBody, err := json.Marshal(stats)
+	jsonString := string(jsonBody)
 
-	return string(jsonBody), err
+	return jsonString, err
 }
 
