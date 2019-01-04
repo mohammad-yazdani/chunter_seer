@@ -87,7 +87,7 @@ func MailChange(notifications []ChangeNotification) {
 		shared.LOG(err.Error())
 	}
 
-	msg := "From: " + "Chunter SeeR" + "\n" +
+	msg := "From: " + serverUsername + "\n" +
 		"To: " + u0 + "\n" +
 		"Subject: Chunter UPDATE\n\n"
 
