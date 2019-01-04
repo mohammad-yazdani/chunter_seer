@@ -10,6 +10,11 @@ import (
 	"strings"
 )
 
+type ChangeNotification struct {
+	Catalog string
+	Change int
+}
+
 var mailingList []string
 
 var serverUsername string
@@ -27,13 +32,18 @@ func SetUpMail(username string, password string, host string) {
 }
 
 func AddToMailingList(mail string) (string, error) {
+	for _, email := range mailingList {
+		if email == mail {
+			return "EXISTS", nil
+		}
+	}
 	mailingList = append(mailingList, mail)
 	store.AddEmail(mail)
 	return "OK", nil
 }
 
 // TODO : TEMP solution
-func MailChange(course string, change int) {
+func MailChange(notifications []ChangeNotification) {
 
 	if len(mailingList) == 0 {
 		return
@@ -82,14 +92,21 @@ func MailChange(course string, change int) {
 	msgString := strings.Builder{}
 	msgString.WriteString(msg)
 
-	msgString.WriteString("Course: ")
-	msgString.WriteString(course)
-	msgString.WriteString("\n")
+	for index, change := range notifications {
 
-	changeStr := strconv.FormatInt(int64(change), 10)
-	msgString.WriteString("Change: ")
-	msgString.WriteString(changeStr)
-	msgString.WriteString("\n")
+		indexStr := strconv.FormatInt(int64(index), 10)
+		msgString.WriteString(indexStr)
+		msgString.WriteString(". ")
+
+		msgString.WriteString("Course: ")
+		msgString.WriteString(change.Catalog)
+		msgString.WriteString("\t\t")
+
+		changeStr := strconv.FormatInt(int64(change.Change), 10)
+		msgString.WriteString("Change: ")
+		msgString.WriteString(changeStr)
+		msgString.WriteString("\n")
+	}
 
 	msg = msgString.String()
 	_, err = w.Write([]byte(msg))

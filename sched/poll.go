@@ -13,11 +13,13 @@ func PollEndpoint(interval int)  {
 
 func fetchCourses(_ time.Time) {
 	catalogs := api.GetFetchList()
+	schedules := make([]api.CourseSchedule, 0)
 	for _, catalog := range catalogs {
 		if catalog.IsEmpty() {
 			continue
 		}
 		schedule := api.CourseScheduleQuery(catalog)
-		hasChanged(schedule)
+		schedules = append(schedules, schedule...)
 	}
+	hasChanged(schedules)
 }

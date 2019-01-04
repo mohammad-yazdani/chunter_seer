@@ -82,7 +82,7 @@ func AddToFetchList(catalog string) (string, error) {
 
 	fetchListMutex.Lock()
 	fetchList[c] += 1
-	store.AddCourse(c.Subject, c.CatalogNumber)
+	store.AddCourse(c.Subject + " " + c.CatalogNumber)
 	fetchListMutex.Unlock()
 
 	return "OK", nil
@@ -113,5 +113,6 @@ func CourseScheduleQuery(catalog CourseCatalog) []CourseSchedule {
 	var argMap map[string]string
 	query = addUriArgs(query, argMap)
 	fetched := getCourseSchedule(query)
+
 	return fetched.Data
 }

@@ -18,7 +18,7 @@ func SetUpDb() {
 	}
 
 	sqlStmt := `
-	create table if not exists emails (id integer not null primary key, email text);
+	create table if not exists emails (id integer not null primary key, email text unique);
 	`
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
@@ -28,7 +28,18 @@ func SetUpDb() {
 
 	sqlStmt = `
 	create table if not exists courses 
-		(id integer not null primary key, subject text, catalog_number text, listeners integer);
+		(id integer not null primary key, catalog text unique, listeners integer);
+	`
+	_, err = db.Exec(sqlStmt)
+	if err != nil {
+		shared.LOG(err.Error())
+		return
+	}
+
+	sqlStmt = `
+	create table if not exists enrollments 
+		(class integer not null primary key, subject text, catalog_number text, section text,
+		 total integer, capacity integer);
 	`
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
@@ -67,17 +78,46 @@ func AddEmail(email string) {
 	}
 }
 
-func AddCourse(subject string, catalogNumber string) {
+func AddCourse(catalog string) {
 	tx, err := store.Begin()
 	if err != nil {
 		shared.LOG(err.Error())
 	}
-	stmt, err := tx.Prepare("insert into courses(subject, catalog_number) values(?, ?)")
+	stmt, err := tx.Prepare("insert into courses(catalog) values(?)")
 	if err != nil {
 		shared.LOG(err.Error())
 	}
 
-	_, err = stmt.Exec(subject, catalogNumber)
+	_, err = stmt.Exec(catalog)
+	if err != nil {
+		shared.LOG(err.Error())
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		shared.LOG(err.Error())
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		shared.LOG(err.Error())
+	}
+}
+
+func SaveEnrollment(e EnrollStats) {
+	tx, err := store.Begin()
+	if err != nil {
+		shared.LOG(err.Error())
+	}
+
+	stmt, err := tx.Prepare(
+		"insert or replace into " +
+			"enrollments(class, subject, catalog_number, section, total, capacity) values(?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		shared.LOG(err.Error())
+	}
+
+	_, err = stmt.Exec(e.Class, e.Subject, e.CatalogNumber, e.Section, e.Total, e.Capacity)
 	if err != nil {
 		shared.LOG(err.Error())
 	}
@@ -120,22 +160,21 @@ func GetEmails() []string {
 	return emails
 }
 
-func GetCourses()[][]string  {
-	courses := make([][]string, 0)
+func GetCourses() []string  {
+	courses := make([]string, 0)
 
-	rows, err := store.Query("select subject, catalog_number from courses")
+	rows, err := store.Query("select catalog from courses")
 	if err != nil {
 		shared.LOG(err.Error())
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var subject string
-		var catalogNumber string
+		var catalog string
 
-		err = rows.Scan(&subject, &catalogNumber)
+		err = rows.Scan(&catalog)
 
-		courses = append(courses, []string{subject, catalogNumber})
+		courses = append(courses, catalog)
 
 		if err != nil {
 			shared.LOG(err.Error())
@@ -149,3 +188,36 @@ func GetCourses()[][]string  {
 	return courses
 }
 
+func GetEnrollments() []EnrollStats  {
+	enrolls := make([]EnrollStats, 0)
+
+	rows, err := store.Query("select class, subject, catalog_number, section, total, capacity from enrollments")
+	if err != nil {
+		shared.LOG(err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var classId int
+		var subject string
+		var catalogNumber string
+		var section string
+		var total int
+		var capacity int
+
+		err = rows.Scan(&classId, &subject, &catalogNumber, &section, &total, &capacity)
+
+		enrolls = append(enrolls, EnrollStats{Class:classId, Subject:subject, CatalogNumber:catalogNumber,
+				Section:section, Total:total, Capacity:capacity})
+
+		if err != nil {
+			shared.LOG(err.Error())
+		}
+	}
+	err = rows.Err()
+	if err != nil {
+		shared.LOG(err.Error())
+	}
+
+	return enrolls
+}

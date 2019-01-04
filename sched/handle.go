@@ -4,56 +4,73 @@ import (
 	"chunter_seer/api"
 	"chunter_seer/notif"
 	"chunter_seer/shared"
+	"chunter_seer/store"
 )
 
-var forceFlushInterval = 4320
+var forceFlushInterval = 360
 
-type EnrollStats struct {
-	Capacity int
-	Total int
-}
-
-type EnrollChange struct {
-	Course api.CourseCatalog
-	Change int
-}
-
-var courseStats map[api.CourseCatalog]EnrollStats
+var courseStats map[int]store.EnrollStats
 var forceFlushCounter int
 
 func SetUpScheduler()  {
-	courseStats = make(map[api.CourseCatalog]EnrollStats, 0)
+	courseStats = make(map[int]store.EnrollStats, 0)
+
+	fromDb := store.GetEnrollments()
+
+	for _, course := range fromDb {
+		courseStats[course.Class] = course
+	}
+
 	forceFlushCounter = 0
 }
 
-func handleChange(change EnrollChange) {
-	forceFlushCounter += 1
-	if change.Change == 0 && forceFlushCounter < forceFlushInterval {
-		return
-	}
+func hasChanged(schedules []api.CourseSchedule) {
 	if forceFlushCounter == forceFlushInterval {
 		forceFlushCounter = 0
-		shared.LOG("FORCE FLUSH")
 	}
-	notif.MailChange(change.Course.Subject + change.Course.CatalogNumber, change.Change)
-}
 
-// TODO : Thread runnable
-// TODO : Make atomic
-func hasChanged(schedules []api.CourseSchedule) {
+	changeBatch := make([]notif.ChangeNotification, 0)
+	processBatch := make([]store.EnrollStats, 0)
+
 	for _, schedule := range schedules {
-		catalog := api.CourseCatalog{Subject:schedule.Subject,
-			CatalogNumber:schedule.CatalogNumber, Section:schedule.Section}
+		catalog := schedule.ClassNumber
+
+		stat := store.EnrollStats{Class:schedule.ClassNumber, Subject:schedule.Subject, CatalogNumber:schedule.CatalogNumber,
+			Section:schedule.Section, Total:schedule.EnrollmentTotal, Capacity:schedule.EnrollmentCapacity}
 
 		if stats, exists := courseStats[catalog]; exists {
 			oldDiff := stats.Capacity - stats.Total
 			newDiff := schedule.EnrollmentCapacity - schedule.EnrollmentTotal
-			handleChange(EnrollChange{Course:catalog, Change:newDiff - oldDiff})
+
+			if oldDiff != newDiff {
+				course := schedule.Subject + " " + schedule.CatalogNumber + " " + schedule.Subject
+				changeBatch = append(changeBatch, notif.ChangeNotification{Catalog:course, Change:newDiff - oldDiff})
+			}
 		} else {
-			courseStats[catalog] = EnrollStats{Capacity:schedule.EnrollmentCapacity,
-				Total:schedule.EnrollmentTotal}
-			handleChange(EnrollChange{Course:catalog, Change:0})
+			courseStats[catalog] = stat
 		}
+
+		processBatch = append(processBatch, stat)
 	}
+
+	if forceFlushCounter == 0 {
+		shared.LOG("FORCE FLUSH")
+
+		mailFlush := make([]notif.ChangeNotification, 0)
+		for _, c := range processBatch {
+			store.SaveEnrollment(c)
+			catalog := c.Subject + " " + c.CatalogNumber + " " + c.Section
+			change := notif.ChangeNotification{Catalog:catalog, Change: c.Capacity - c.Total}
+			mailFlush = append(mailFlush, change)
+		}
+
+		notif.MailChange(changeBatch)
+	}
+
+	if len(changeBatch) > 0 && forceFlushCounter != 0 {
+		notif.MailChange(changeBatch)
+	}
+
+	forceFlushCounter += 1
 }
 

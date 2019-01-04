@@ -36,7 +36,8 @@ func SetUpApi(key string) {
 	fetchList = make(map[CourseCatalog]int, 0)
 	fromDb := store.GetCourses()
 	for _, course := range fromDb {
-		fetchList[CourseCatalog{Subject:course[0], CatalogNumber:course[1]}] = 0
+		catalog := strings.Split(course, " ")
+		fetchList[CourseCatalog{Subject:catalog[0], CatalogNumber:catalog[1]}] = 0
 	}
 	fetchListMutex.Unlock()
 

@@ -3,18 +3,17 @@ package api
 import (
 	"chunter_seer/shared"
 	"encoding/json"
+	"strconv"
 )
 
-type courseStats struct {
-	Listeners 	int `json:"listeners"`
-}
+type Stats map[string]map[string]string
 
 // Request Handler
 func GetStats(_ string) (string, error) {
 
 	shared.LOG("STATS QUERY")
 
-	stats := map[string]map[string]courseStats{}
+	stats := make(Stats)
 
 	for key, val := range fetchList {
 		if key.IsEmpty() {
@@ -26,10 +25,10 @@ func GetStats(_ string) (string, error) {
 		listeners := val
 
 		if stats[subject] == nil {
-			stats[subject] = map[string]courseStats{}
+			stats[subject] = map[string]string{}
 		}
 
-		stats[subject][catalogNumber] = courseStats{Listeners:listeners}
+		stats[subject][catalogNumber] = strconv.FormatInt(int64(listeners), 10)
 	}
 
 	jsonBody, err := json.Marshal(stats)
