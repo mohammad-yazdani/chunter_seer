@@ -69,12 +69,12 @@ func hasChanged(schedules []api.CourseSchedule) {
 			}
 			oldDiffs = append(oldDiffs, oldDiff)
 		} else {
-			courseStats[catalog] = stat
 			oldDiffs = append(oldDiffs, 0)
 		}
 
 		processBatch = append(processBatch, stat)
 		store.SaveEnrollment(stat)
+		courseStats[catalog] = stat
 	}
 
 	if forceFlushCounter == 0 {
