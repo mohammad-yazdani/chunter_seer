@@ -74,6 +74,7 @@ func hasChanged(schedules []api.CourseSchedule) {
 		}
 
 		processBatch = append(processBatch, stat)
+		store.SaveEnrollment(stat)
 	}
 
 	if forceFlushCounter == 0 {
@@ -81,7 +82,6 @@ func hasChanged(schedules []api.CourseSchedule) {
 
 		mailFlush := make([]notif.ChangeNotification, 0)
 		for diffIndex, c := range processBatch {
-			store.SaveEnrollment(c)
 			catalog := c.Subject + " " + c.CatalogNumber + " " + c.Section
 			change := notif.ChangeNotification{
 				Catalog:  catalog,
