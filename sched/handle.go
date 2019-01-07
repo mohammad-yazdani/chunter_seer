@@ -2,9 +2,11 @@ package sched
 
 import (
 	"chunter_seer/api"
+	"chunter_seer/listen"
 	"chunter_seer/notif"
 	"chunter_seer/shared"
 	"chunter_seer/store"
+	"strconv"
 )
 
 var forceFlushInterval = 360
@@ -22,6 +24,19 @@ func SetUpScheduler()  {
 	}
 
 	forceFlushCounter = 0
+
+	listen.AddHandler("set_interval", SetFlushInterval)
+}
+
+func SetFlushInterval(interval string) (string, error)  {
+	intInterval, err := strconv.Atoi(interval)
+	if err != nil {
+		return "COULD NOT PARSE", err
+	}
+
+	forceFlushCounter = intInterval
+
+	return "FORCE FLUSH INTERVAL IS SET AT: " + strconv.FormatInt(int64(forceFlushCounter), 10), nil
 }
 
 func hasChanged(schedules []api.CourseSchedule) {
@@ -76,11 +91,11 @@ func hasChanged(schedules []api.CourseSchedule) {
 			mailFlush = append(mailFlush, change)
 		}
 
-		notif.MailChange(mailFlush)
+		notif.MailChange(mailFlush, true)
 	}
 
 	if len(changeBatch) > 0 && forceFlushCounter != 0 {
-		notif.MailChange(changeBatch)
+		notif.MailChange(changeBatch, false)
 	}
 
 	forceFlushCounter += 1

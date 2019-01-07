@@ -45,7 +45,7 @@ func AddToMailingList(mail string) (string, error) {
 }
 
 // TODO : TEMP solution
-func MailChange(notifications []ChangeNotification) {
+func MailChange(notifications []ChangeNotification, isForceFlush bool) {
 
 	if len(mailingList) == 0 || len(notifications) == 0 {
 		return
@@ -89,7 +89,14 @@ func MailChange(notifications []ChangeNotification) {
 
 	msg := "From: " + serverUsername + "\n" +
 		"To: " + u0 + "\n" +
-		"Subject: Chunter UPDATE\n\n"
+		"Subject: Chunter "
+
+	if isForceFlush {
+		msg += "FLUSH"
+	} else {
+		msg += "CHANGE"
+	}
+	msg += "\n\n"
 
 	msgString := strings.Builder{}
 	msgString.WriteString(msg)
