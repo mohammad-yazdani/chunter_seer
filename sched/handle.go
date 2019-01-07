@@ -9,12 +9,12 @@ import (
 	"strconv"
 )
 
-var forceFlushInterval = 360
+var forceFlushInterval = 4320
 
 var courseStats map[int]store.EnrollStats
 var forceFlushCounter int
 
-func SetUpScheduler()  {
+func SetUpScheduler() {
 	courseStats = make(map[int]store.EnrollStats, 0)
 
 	fromDb := store.GetEnrollments()
@@ -51,8 +51,8 @@ func hasChanged(schedules []api.CourseSchedule) {
 	for _, schedule := range schedules {
 		catalog := schedule.ClassNumber
 
-		stat := store.EnrollStats{Class:schedule.ClassNumber, Subject:schedule.Subject, CatalogNumber:schedule.CatalogNumber,
-			Section:schedule.Section, Total:schedule.EnrollmentTotal, Capacity:schedule.EnrollmentCapacity}
+		stat := store.EnrollStats{Class: schedule.ClassNumber, Subject: schedule.Subject, CatalogNumber: schedule.CatalogNumber,
+			Section: schedule.Section, Total: schedule.EnrollmentTotal, Capacity: schedule.EnrollmentCapacity}
 
 		if stats, exists := courseStats[catalog]; exists {
 			oldDiff := stats.Capacity - stats.Total
@@ -62,10 +62,10 @@ func hasChanged(schedules []api.CourseSchedule) {
 				course := schedule.Subject + " " + schedule.CatalogNumber + " " + schedule.Subject
 				changeBatch = append(changeBatch,
 					notif.ChangeNotification{
-						Catalog:course,
-						Total:schedule.EnrollmentTotal,
-						Capacity:schedule.EnrollmentCapacity,
-						Change:newDiff - oldDiff})
+						Catalog:  course,
+						Total:    schedule.EnrollmentTotal,
+						Capacity: schedule.EnrollmentCapacity,
+						Change:   newDiff - oldDiff})
 			}
 			oldDiffs = append(oldDiffs, oldDiff)
 		} else {
@@ -84,10 +84,10 @@ func hasChanged(schedules []api.CourseSchedule) {
 			store.SaveEnrollment(c)
 			catalog := c.Subject + " " + c.CatalogNumber + " " + c.Section
 			change := notif.ChangeNotification{
-				Catalog:catalog,
-				Total:c.Total,
-				Capacity:c.Capacity,
-				Change: (c.Capacity - c.Total) - (oldDiffs[diffIndex])}
+				Catalog:  catalog,
+				Total:    c.Total,
+				Capacity: c.Capacity,
+				Change:   (c.Capacity - c.Total) - (oldDiffs[diffIndex])}
 			mailFlush = append(mailFlush, change)
 		}
 
@@ -100,4 +100,3 @@ func hasChanged(schedules []api.CourseSchedule) {
 
 	forceFlushCounter += 1
 }
-
